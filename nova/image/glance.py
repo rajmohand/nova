@@ -311,18 +311,22 @@ class GlanceImageServiceV2(object):
                 'img_signature_key_type'
             )
             try:
-                verifier = signature_utils.get_verifier(
-                    context=context,
-                    img_signature_certificate_uuid=img_sig_cert_uuid,
-                    img_signature_hash_method=img_sig_hash_method,
-                    img_signature=img_signature,
-                    img_signature_key_type=img_sig_key_type,
-                )
+                #verify only if it's strict or has signature values
+                if CONF.glance.verify_glance_signatures_strict or (context and img_sig_cert_uuid and img_sig_hash_method and img_signature and img_sig_key_type):
+                    verifier = signature_utils.get_verifier(
+                        context=context,
+                        img_signature_certificate_uuid=img_sig_cert_uuid,
+                        img_signature_hash_method=img_sig_hash_method,
+                        img_signature=img_signature,
+                        img_signature_key_type=img_sig_key_type,
+                    )
             except cursive_exception.SignatureVerificationError:
                 with excutils.save_and_reraise_exception():
                     LOG.error('Image signature verification failed '
                               'for image: %s', image_id)
 
+
+                    
         close_file = False
         if data is None and dst_path:
             data = open(dst_path, 'wb')
